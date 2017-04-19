@@ -2,7 +2,7 @@ project(libpng)
 cmake_minimum_required( VERSION 2.8.11 )
 include( "../../cmake/CMakeHeader.txt")
 
-add_thirdparty_lib(zlib libz)
+add_thirdparty_lib_target(zlib libz)
 set(ZLIB_INCLUDE_DIR "${MODHOT_ROOT}/thirdparty/zlib")
 
 # Copyright (C) 2007,2009-2016 Glenn Randers-Pehrson
