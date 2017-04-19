@@ -2,9 +2,8 @@ project(libpng)
 cmake_minimum_required( VERSION 2.8.11 )
 include( "../../cmake/CMakeHeader.txt")
 
-add_thirdparty_lib(zlib)
+add_thirdparty_lib(zlib libz)
 set(ZLIB_INCLUDE_DIR "${MODHOT_ROOT}/thirdparty/zlib")
-##set(ZLIB_LIBRARY "${MODHOT_ROOT}/thirdparty/zlib/build/libz.so")
 
 # Copyright (C) 2007,2009-2016 Glenn Randers-Pehrson
 # Written by Christian Ehrlicher, 2007
@@ -67,8 +66,8 @@ endif()
 
 # COMMAND LINE OPTIONS
 option(PNG_SHARED "Build shared lib" ON)
-option(PNG_STATIC "Build static lib" ON)
-option(PNG_TESTS  "Build libpng tests" ON)
+option(PNG_STATIC "Build static lib" OFF)
+option(PNG_TESTS  "Build libpng tests" OFF)
 
 # Many more configuration options could be added here
 option(PNG_FRAMEWORK "Build OS X framework" OFF)
@@ -472,13 +471,13 @@ if(PNG_SHARED)
   add_library(png SHARED ${libpng_sources})
   set(PNG_LIB_TARGETS png)
   set_target_properties(png PROPERTIES OUTPUT_NAME ${PNG_LIB_NAME})
-  add_dependencies(png genfiles)
+  add_dependencies(png genfiles zlib)
   if(MSVC)
     # msvc does not append 'lib' - do it here to have consistent name
     set_target_properties(png PROPERTIES PREFIX "lib")
     set_target_properties(png PROPERTIES IMPORT_PREFIX "lib")
   endif()
-  target_link_libraries(png ${ZLIB_LIBRARY} ${M_LIBRARY})
+  target_link_libraries(png zlib ${M_LIBRARY})
 
   if(UNIX AND AWK)
     if(HAVE_LD_VERSION_SCRIPT)
@@ -489,14 +488,13 @@ if(PNG_SHARED)
         "-Wl,-M -Wl,'${CMAKE_CURRENT_BINARY_DIR}/libpng.vers'")
     endif()
   endif()
-  add_dependencies(png zlib)
 endif()
 
 if(PNG_STATIC)
   # does not work without changing name
   set(PNG_LIB_NAME_STATIC png_static)
   add_library(png_static STATIC ${libpng_sources})
-  add_dependencies(png_static genfiles)
+  add_dependencies(png_static zlib genfiles)
   # MSVC doesn't use a different file extension for shared vs. static
   # libs.  We are able to change OUTPUT_NAME to remove the _static
   # for all other platforms.
@@ -514,14 +512,13 @@ if(PNG_STATIC)
     # msvc does not append 'lib' - do it here to have consistent name
     set_target_properties(png_static PROPERTIES PREFIX "lib")
   endif()
-  target_link_libraries(png_static ${ZLIB_LIBRARY} ${M_LIBRARY})
-  add_dependencies(png_static zlib)
+  target_link_libraries(png_static zlib ${M_LIBRARY})
 endif()
 
 if(PNG_FRAMEWORK)
   set(PNG_LIB_NAME_FRAMEWORK png_framework)
   add_library(png_framework SHARED ${libpng_sources})
-  add_dependencies(png_framework genfiles)
+  add_dependencies(png_framework zlib genfiles)
   list(APPEND PNG_LIB_TARGETS png_framework)
   set_target_properties(png_framework PROPERTIES
     FRAMEWORK TRUE
@@ -532,8 +529,7 @@ if(PNG_FRAMEWORK)
     XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
     PUBLIC_HEADER "${libpng_public_hdrs}"
     OUTPUT_NAME png)
-  target_link_libraries(png_framework ${ZLIB_LIBRARY} ${M_LIBRARY})
-  add_dependencies(png_framework zlib)
+  target_link_libraries(png_framework zlib ${M_LIBRARY})
 endif()
 
 if(NOT PNG_LIB_TARGETS)
